@@ -48,12 +48,14 @@ private:
   std::shared_ptr<glim::AsyncOdometryEstimation> odometry_estimation;
   std::unique_ptr<glim::AsyncSubMapping> sub_mapping;
   std::unique_ptr<glim::AsyncGlobalMapping> global_mapping;
-
+  
   bool keep_raw_points;
   double imu_time_offset;
   double points_time_offset;
   double acc_scale;
   bool dump_on_unload;
+  bool export_points;
+  std::string map_ply_path;
 
   std::string intensity_field, ring_field;
 

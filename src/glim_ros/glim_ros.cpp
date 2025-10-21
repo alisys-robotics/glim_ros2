@@ -36,6 +36,8 @@
 #include <glim/mapping/async_global_mapping.hpp>
 #include <glim_ros/ros_compatibility.hpp>
 #include <glim_ros/ros_qos.hpp>
+#include <glk/io/ply_io.hpp>
+
 
 namespace glim {
 
@@ -69,6 +71,14 @@ GlimROS::GlimROS(const rclcpp::NodeOptions& options) : Node("glim_ros", options)
   std::string config_path;
   this->declare_parameter<std::string>("config_path", "config");
   this->get_parameter<std::string>("config_path", config_path);
+
+  map_ply_path = "/tmp/dump/map.ply";
+  this->declare_parameter<std::string>("map_ply_path", "/tmp/dump/map.ply");
+  this->get_parameter<std::string>("map_ply_path", map_ply_path);
+
+  export_points = false;
+  this->declare_parameter<bool>("export_points", false);
+  this->get_parameter<bool>("export_points", export_points);
 
   if (config_path[0] != '/') {
     // config_path is relative to the glim directory
@@ -206,11 +216,16 @@ GlimROS::GlimROS(const rclcpp::NodeOptions& options) : Node("glim_ros", options)
 GlimROS::~GlimROS() {
   spdlog::debug("quit");
   extension_modules.clear();
-
   if (dump_on_unload) {
     std::string dump_path = "/tmp/dump";
     wait(true);
     save(dump_path);
+  }
+  // Save PLY points
+  if (export_points && global_mapping){
+    spdlog::info("Exporting map to {}", map_ply_path);
+    std::vector<Eigen::Vector4d> points = global_mapping->export_points();
+    glk::save_ply_binary(map_ply_path, points.data(), points.size());
   }
 }
 
